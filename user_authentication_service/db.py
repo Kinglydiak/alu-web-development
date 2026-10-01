@@ -44,3 +44,17 @@ class DB:
         if user is None:
             raise NoResultFound()
         return user
+
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """Update the user identified by user_id with the given keyword
+        arguments and commit, raising ValueError if a keyword does not
+        correspond to a user attribute.
+        """
+        user = self.find_user_by(id=user_id)
+        columns = User.__table__.columns.keys()
+        for key in kwargs:
+            if key not in columns:
+                raise ValueError()
+        for key, value in kwargs.items():
+            setattr(user, key, value)
+        self._session.commit()
