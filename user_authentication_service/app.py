@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Flask app module exposing the routes of the authentication service."""
-from flask import Flask, jsonify, request
+from flask import Flask, abort, jsonify, request
 
 from auth import Auth
 
@@ -27,6 +27,21 @@ def users() -> str:
     except ValueError:
         return jsonify({"message": "email already registered"}), 400
     return jsonify({"email": email, "message": "user created"})
+
+
+@app.route("/sessions", methods=["POST"])
+def login() -> str:
+    """Log a user in from the form data, set the session_id cookie and
+    return a JSON payload, or respond with a 401 error on bad credentials.
+    """
+    email = request.form.get("email")
+    password = request.form.get("password")
+    if not AUTH.valid_login(email, password):
+        abort(401)
+    session_id = AUTH.create_session(email)
+    response = jsonify({"email": email, "message": "logged in"})
+    response.set_cookie("session_id", session_id)
+    return response
 
 
 if __name__ == "__main__":
